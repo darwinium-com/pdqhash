@@ -4,12 +4,12 @@ use std::ops::Deref;
 /// Re-export of image crate.
 pub use image;
 use image::GenericImageView;
-use dct_matrix::make_matrix;
 
 const LUMA_FROM_R_COEFF: f32 = 0.299;
 const LUMA_FROM_G_COEFF: f32 = 0.587;
 const LUMA_FROM_B_COEFF: f32 = 0.114;
 
+mod dct;
 
 //  - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Minimum size tested.
@@ -115,7 +115,7 @@ fn to_luma_image(image: &image::DynamicImage) -> (usize, usize, Vec<f32>) {
         image::DynamicImage::ImageLuma16(image) => image.to_luma_image(),
         image::DynamicImage::ImageLumaA16(image) => image.to_luma_image(),
         image::DynamicImage::ImageRgb16(image) => image.to_luma_image(),
-        image::DynamicImage::ImageRgba16(image) => image.to_luma_image()
+        image::DynamicImage::ImageRgba16(image) => image.to_luma_image(),
     }
 }
 
@@ -282,9 +282,6 @@ const DCT_OUTPUT_MATRIX_SIZE: usize = DCT_OUTPUT_W_H * DCT_OUTPUT_W_H;
 
 const HASH_LENGTH: usize = DCT_OUTPUT_MATRIX_SIZE / 8;
 
-const DCT_MATRIX: [[f32; BUFFER_W_H]; DCT_OUTPUT_W_H] = make_matrix!();
-
-
 /// Perform a discrete cosine transform from a 64x64 matrix and compute only a 16x16 corner of it. Quicker than computing the whole thing.
 fn dct64_to_16<const OUT_NUM_ROWS: usize, const OUT_NUM_COLS: usize>(input: &[[f32; OUT_NUM_COLS]; OUT_NUM_ROWS]) -> [f32; DCT_OUTPUT_MATRIX_SIZE] {
     let mut intermediate_matrix = [[0.0; OUT_NUM_COLS]; DCT_OUTPUT_W_H];
@@ -292,7 +289,7 @@ fn dct64_to_16<const OUT_NUM_ROWS: usize, const OUT_NUM_COLS: usize>(input: &[[f
         for j in 0..OUT_NUM_COLS {
             let mut sumk = 0.0;
             for k in 0..BUFFER_W_H {
-                sumk += DCT_MATRIX[i][k] * input[k][j];
+                sumk += f32::from_bits(dct::DCT_MATRIX[i][k]) * input[k][j];
             }
 
             intermediate_matrix[i][j] = sumk;
@@ -304,7 +301,7 @@ fn dct64_to_16<const OUT_NUM_ROWS: usize, const OUT_NUM_COLS: usize>(input: &[[f
         for j in 0..DCT_OUTPUT_W_H {
             let mut sumk = 0.0;
             for k in 0..BUFFER_W_H {
-                sumk += intermediate_matrix[i][k] * DCT_MATRIX[j][k];
+                sumk += intermediate_matrix[i][k] * f32::from_bits(dct::DCT_MATRIX[j][k]);
             }
             output[i * DCT_OUTPUT_W_H + j] = sumk;
         }
