@@ -2,6 +2,12 @@
 name = "pdqhash"
 version = "0.1.0"
 edition = "2018"
+license-file = "LICENSE.txt"
+keywords = ["image", "pdq", "fuzzy", "hash"]
+repository = "https://github.com/darwinium-com/pdqhash"
+description = "Perceptual Hashing, originally designed by Facebook. Identify the same image even after some modifications."
+authors = ["Caleb Moore <cmoore@darwinium.com>"]
+
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
