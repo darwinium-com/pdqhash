@@ -1,7 +1,9 @@
 ///! Compute PDQ hash of an image.
+///! The PDQ algorithm was developed and open-sourced by Facebook (now Meta) in 2019.
+///! It specifies a transformation which converts images into a binary format ('PDQ Hash') whereby 'perceptually similar’ images produce similar outputs.
+///! It was designed to offer an industry standard for representing images to collaborate on threat mitigation.
 use std::ops::Deref;
 
-/// Re-export of image crate.
 pub use image;
 use image::GenericImageView;
 
@@ -399,8 +401,9 @@ fn pdq_buffer16x16_to_bits(input: &[f32; DCT_OUTPUT_MATRIX_SIZE]) -> [u8; HASH_L
     hash
 }
 
-/// Generate a PDQ hash without first downscaling, it is bit-for-bit compatible with the expected output from the Java version provided by facebook.
-/// Returns a hash and has and quality value.
+/// Returns PDQ hash and quality of an image without first downscaling.
+///
+/// It is bit-for-bit compatible with the expected output from the Java version provided by facebook.
 pub fn generate_pdq_full_size(image: &image::DynamicImage) -> ([u8; HASH_LENGTH], f32) {
     let (num_cols, num_rows, mut image) = to_luma_image(image);
     let window_size_along_rows = compute_jarosz_filter_window_size(num_cols, BUFFER_W_H);
@@ -425,8 +428,10 @@ pub fn generate_pdq_full_size(image: &image::DynamicImage) -> ([u8; HASH_LENGTH]
     )
 }
 
-/// Generate a PDQ hash from an image. It will first downsize the image in RGB space using image crate, which is more efficient than computing PDQ on the full size image.
-/// Returns a hash and has and quality value.
+/// Returns PDQ hash and quality of an image.
+///
+/// Returns None if image is too small to generate a useful hash.
+/// This will first downsize the image in RGB space using image crate, which is more efficient than computing PDQ on the full size image. Some divergence from reference implementation is expected.
 pub fn generate_pdq(image: &image::DynamicImage) -> Option<([u8; HASH_LENGTH], f32)> {
     if image.width() < MIN_HASHABLE_DIM || image.height() < MIN_HASHABLE_DIM {
         return None;
