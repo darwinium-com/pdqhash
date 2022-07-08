@@ -15,7 +15,7 @@ authors = ["Caleb Moore <cmoore@darwinium.com>"]
 image = "^0.23.14"
 
 [dev-dependencies]
-hex = "*"
+hex = "0.4"
 criterion = "0.3"
 
 [[bench]]
