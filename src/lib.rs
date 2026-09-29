@@ -276,13 +276,13 @@ fn decimate_float<const OUT_NUM_ROWS: usize, const OUT_NUM_COLS: usize>(
 fn pdq_image_domain_quality_metric<const OUT_NUM_ROWS: usize, const OUT_NUM_COLS: usize>(
     buffer64x64: &[[f32; OUT_NUM_COLS]; OUT_NUM_ROWS],
 ) -> f32 {
-    let mut gradient_sum = 0.0;
+    let mut gradient_sum = 0;
 
     for i in 0..(OUT_NUM_ROWS - 1) {
         for j in 0..OUT_NUM_COLS {
             let u = buffer64x64[i][j];
             let v = buffer64x64[i + 1][j];
-            let d = (u - v) / 255.;
+            let d = (((u - v) * 100.0) / 255.0).trunc() as i32;
             gradient_sum += d.abs();
         }
     }
@@ -290,18 +290,18 @@ fn pdq_image_domain_quality_metric<const OUT_NUM_ROWS: usize, const OUT_NUM_COLS
         for j in 0..(OUT_NUM_COLS - 1) {
             let u = buffer64x64[i][j];
             let v = buffer64x64[i][j + 1];
-            let d = (u - v) / 255.;
+            let d = (((u - v) * 100.0) / 255.0).trunc() as i32;
             gradient_sum += d.abs();
         }
     }
 
     // Heuristic scaling factor.
-    let quality = gradient_sum / 90.;
-    if quality > 1.0 {
-        1.0
-    } else {
-        quality
+    let mut quality = gradient_sum / 90;
+    if quality > 100 {
+        quality = 100;
     }
+
+    quality as f32
 }
 
 const BUFFER_W_H: usize = 64;
